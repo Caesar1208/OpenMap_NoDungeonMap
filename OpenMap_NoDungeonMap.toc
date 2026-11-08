@@ -1,0 +1,9 @@
+## Interface: 16001
+## Title: OpenMap - No Dungeon Map
+## Notes: Turns off OpenMap's dungeon map. Its dungeon entrance icons open Dungeon Journal's map instead.
+## Author: local
+## Version: 1.1
+## Dependencies: OpenMap
+## OptionalDeps: ForeverDungeonJournal
+
+NoDungeonMap.lua
