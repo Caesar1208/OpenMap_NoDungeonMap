@@ -1,0 +1,4 @@
+package-as: OpenMap_NoDungeonMap
+
+ignore:
+  - README.md
