@@ -18,3 +18,9 @@ between the two addons, add it to the `ALIAS` table in `NoDungeonMap.lua`.
 Copy this folder into `World of Warcraft/_forever_/Interface/AddOns/` (the folder must be named
 `OpenMap_NoDungeonMap`). Requires OpenMap; Dungeon Journal is optional (without it, entrance clicks
 do nothing).
+
+## Credits
+
+All the actual maps and data come from [OpenMap](https://github.com/openmap-world/openmap)
+(by Jigrobbulus) and Dungeon Journal (by Exehn). This addon only connects the two and isn't
+affiliated with either project.
