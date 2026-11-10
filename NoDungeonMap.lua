@@ -131,6 +131,17 @@ end
 -- Several at one entrance (Scarlet Monastery's wings, Blackrock Mountain): pick one
 --------------------------------------------------------------------------------
 local chooser
+local HEADER = 26                -- the title and the X above the rows
+
+-- A click anywhere but the list closes it. (A click on the entrance that opened it is
+-- left to Click, which closes it: clicking the entrance again toggles the list.)
+local function CloseOnClickElsewhere()
+	if not (chooser and chooser:IsShown()) then return end
+	if chooser:IsMouseOver() then return end
+	if chooser.pin and chooser.pin:IsVisible() and chooser.pin:IsMouseOver() then return end
+	chooser:Hide()
+end
+
 local function Choose(pin, keys)
 	if not chooser then
 		chooser = CreateFrame("Frame", "OpenMapNoDungeonMapChooser", WorldMapFrame)
@@ -139,8 +150,24 @@ local function Choose(pin, keys)
 		local bg = chooser:CreateTexture(nil, "BACKGROUND")
 		bg:SetAllPoints()
 		bg:SetColorTexture(0.05, 0.04, 0.03, 0.92)
+		local title = chooser:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+		title:SetPoint("TOPLEFT", 8, -8)
+		title:SetText("Pick a dungeon")
+		local close = CreateFrame("Button", nil, chooser, "UIPanelCloseButton")
+		close:SetSize(26, 26)
+		close:SetPoint("TOPRIGHT", 1, 1)
+		close:SetScript("OnClick", function() chooser:Hide() end)
 		chooser.rows = {}
+		chooser:SetScript("OnHide", function(self) self.pin = nil end)
 		WorldMapFrame:HookScript("OnHide", function() chooser:Hide() end)
+		-- (any mouse button, anywhere on screen; the map's own drag area as a fallback
+		-- for a client without the event)
+		local watcher = CreateFrame("Frame", nil, chooser)
+		if not pcall(watcher.RegisterEvent, watcher, "GLOBAL_MOUSE_DOWN") then
+			local sc = WorldMapFrame.ScrollContainer
+			if sc then sc:HookScript("OnMouseDown", CloseOnClickElsewhere) end
+		end
+		watcher:SetScript("OnEvent", CloseOnClickElsewhere)
 	end
 	local width = 160
 	for i, key in ipairs(keys) do
@@ -148,7 +175,7 @@ local function Choose(pin, keys)
 		if not row then
 			row = CreateFrame("Button", nil, chooser, "UIPanelButtonTemplate")
 			row:SetHeight(22)
-			row:SetPoint("TOPLEFT", 6, -6 - (i - 1) * 24)
+			row:SetPoint("TOPLEFT", 6, -HEADER - (i - 1) * 24)
 			row:SetScript("OnClick", function(self) chooser:Hide() Open(self.key) end)
 			chooser.rows[i] = row
 		end
@@ -159,15 +186,20 @@ local function Choose(pin, keys)
 	end
 	for i = #keys + 1, #chooser.rows do chooser.rows[i]:Hide() end
 	for i = 1, #keys do chooser.rows[i]:SetWidth(width) end
-	chooser:SetSize(width + 12, #keys * 24 + 10)
+	chooser:SetSize(width + 12, HEADER + #keys * 24 + 4)
 	chooser:ClearAllPoints()
 	chooser:SetPoint("TOPLEFT", pin, "BOTTOMRIGHT", 2, 2)
 	chooser:Show()
+	chooser.pin = pin
 end
 
 local function Click(pin)
 	if GameTooltip then GameTooltip:Hide() end
-	if chooser then chooser:Hide() end
+	if chooser and chooser:IsShown() then
+		local same = chooser.pin == pin
+		chooser:Hide()
+		if same then return end      -- (its list was open: clicking the entrance again closes it)
+	end
 	local keys, seen = {}, {}
 	for _, inst in ipairs(pin.instances or {}) do
 		for _, key in ipairs(JournalKeys(inst)) do
